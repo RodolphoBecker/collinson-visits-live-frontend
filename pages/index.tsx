@@ -4,7 +4,7 @@ import React from "react";
 
 const index = () => {
 	return (
-		<Box height="800px">
+		<Box>
 			<MapChart />
 		</Box>
 	);
