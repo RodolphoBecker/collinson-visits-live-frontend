@@ -1,19 +1,23 @@
 import { worldCountries } from "@/utils/world-countries";
 import {
 	Autocomplete,
+	Button,
 	Card,
 	CardContent,
 	CircularProgress,
 	Divider,
+	List,
+	ListItem,
 	Stack,
 	TextField,
+	Typography,
 } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { csv } from "d3-fetch";
 import { scaleLinear } from "d3-scale";
 import sortBy from "lodash/sortBy";
 import randomColor from "randomcolor";
-import { useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import {
 	ComposableMap,
 	Geographies,
@@ -21,7 +25,8 @@ import {
 	Marker,
 } from "react-simple-maps";
 import ModalCustom from "../Modal";
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import HailIcon from "@mui/icons-material/Hail";
 
 type LoungeData = {
 	lat: number;
@@ -91,11 +96,18 @@ const MapChart = () => {
 		setHandleModalOpen(true);
 	};
 
+	const handleRefresh = () => {
+		setLoading(true);
+	}
+
 	return (
 		<>
 			<Stack flexDirection="column" rowGap={2}>
+				{/* Interactive actions section */}
 				<Card variant="outlined">
-					<CardContent sx={{ display: "flex", alignItems: "center" }}>
+					<CardContent
+						sx={{ display: "flex", alignItems: "center", columnGap: 2 }}
+					>
 						<Autocomplete
 							disablePortal
 							multiple
@@ -109,8 +121,14 @@ const MapChart = () => {
 								loungeCodeFilter(value);
 							}}
 						/>
+						<Button variant="contained" color="success" onClick={handleRefresh}>
+							Refresh
+						</Button>
 					</CardContent>
 				</Card>
+				{/* Interactive actions section */}
+
+				{/* Map Section */}
 				<Card variant="outlined">
 					<CardContent
 						sx={{
@@ -148,9 +166,17 @@ const MapChart = () => {
 											key={lounge.lounge_code}
 											title={
 												<>
-													<ul>
-														<li>Lounge Code: {lounge.lounge_code}</li>
-														<li>Total Guests: {lounge.total_guest_count}</li>
+													<List>
+														<ListItem>
+															<Typography variant="caption">
+																Lounge Code: {lounge.lounge_code}
+															</Typography>
+														</ListItem>
+														<ListItem>
+															<Typography variant="caption">
+																Total Guests: {lounge.total_guest_count}
+															</Typography>
+														</ListItem>
 														<Divider
 															sx={{
 																marginTop: "5px",
@@ -158,9 +184,17 @@ const MapChart = () => {
 																background: "white",
 															}}
 														/>
-														<li>Latitude: {lounge.lat}</li>
-														<li>Longitude: {lounge.lng}</li>
-													</ul>
+														<ListItem>
+															<Typography variant="caption">
+																Latitude: {lounge.lat}
+															</Typography>
+														</ListItem>
+														<ListItem>
+															<Typography variant="caption">
+																Longitude: {lounge.lng}
+															</Typography>
+														</ListItem>
+													</List>
 												</>
 											}
 										>
@@ -185,17 +219,27 @@ const MapChart = () => {
 						)}
 					</CardContent>
 				</Card>
+				{/* Map Section */}
 			</Stack>
+
 			<ModalCustom
 				setHandleModalOpen={setHandleModalOpen}
 				handleModalOpen={handleModalOpen}
 			>
-				<ul>
-					<li>
+				<List sx={{ display: "flex", columnGap: 2 }}>
+					<ListItem sx={{ display: "flex", flexDirection: "column" }}>
 						<AccountBalanceIcon sx={{ color: "rgb(162, 7, 41)" }} />
-						<strong>Lounge Code: {clickedLounge?.lounge_code}</strong>
-					</li>
-				</ul>
+						<Typography variant="subtitle2" color={"black"}>
+							Lounge - {clickedLounge?.lounge_code}
+						</Typography>
+					</ListItem>
+					<ListItem sx={{ display: "flex", flexDirection: "column" }}>
+						<HailIcon sx={{ color: "rgb(162, 7, 41)" }} />
+						<Typography variant="subtitle2" color={"black"}>
+							{clickedLounge?.total_guest_count}
+						</Typography>
+					</ListItem>
+				</List>
 			</ModalCustom>
 		</>
 	);
