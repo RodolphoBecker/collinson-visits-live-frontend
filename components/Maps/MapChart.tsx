@@ -9,24 +9,32 @@ import {
 	List,
 	ListItem,
 	Stack,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableRow,
 	TextField,
 	Typography,
 } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
+import {
+	createColumnHelper,
+	flexRender,
+	getCoreRowModel,
+	useReactTable,
+} from "@tanstack/react-table";
 import { csv } from "d3-fetch";
 import { scaleLinear } from "d3-scale";
 import sortBy from "lodash/sortBy";
 import randomColor from "randomcolor";
-import { use, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	ComposableMap,
 	Geographies,
 	Geography,
 	Marker,
 } from "react-simple-maps";
-import ModalCustom from "../Modal";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import HailIcon from "@mui/icons-material/Hail";
 
 type LoungeData = {
 	lat: number;
@@ -34,14 +42,102 @@ type LoungeData = {
 	lounge_code: string;
 	color: string;
 	total_guest_count: number;
-	total_guest_adult: number;
-	total_guest_child: number;
-	total_guest_infant: number;
+	total_guest_count_adult: number;
+	total_guest_count_child: number;
+	total_guest_count_infant: number;
 }[];
 
 type LoungeCodeOptions = {
 	label: string;
 }[];
+
+interface ClickedLoungeTableProps {
+	loungeData: LoungeData[0];
+}
+
+// Create a column helper for the LoungeData
+const columnHelper = createColumnHelper<LoungeData[0] | null>();
+
+// Define the columns for the ClickedLoungtable
+const columns = [
+	columnHelper.accessor("lounge_code", {
+		header: () => "Lounge Code",
+		cell: (info) => info.getValue(),
+	}),
+	columnHelper.accessor("lat", {
+		header: () => "Latitude",
+		cell: (info) => info.renderValue(),
+	}),
+	columnHelper.accessor("lng", {
+		header: () => "Longitude",
+		cell: (info) => info.renderValue(),
+	}),
+	columnHelper.accessor("total_guest_count_infant", {
+		header: () => "Total Infant",
+		cell: (info) => info.renderValue(),
+	}),
+	columnHelper.accessor("total_guest_count_child", {
+		header: () => "Total Child",
+		cell: (info) => info.renderValue(),
+	}),
+	columnHelper.accessor("total_guest_count_adult", {
+		header: () => "Total Adult",
+		cell: (info) => info.renderValue(),
+	}),
+	columnHelper.accessor("total_guest_count", {
+		header: () => "Total Guests",
+		cell: (info) => info.renderValue(),
+	}),
+];
+
+// Define the table for the Clicked Lounge on the map
+const ClickedLoungeTable = ({ loungeData }: ClickedLoungeTableProps) => {
+	const [data, setData] = useState([loungeData]);
+
+	useEffect(() => {
+		setData([loungeData]);
+	}, [loungeData]);
+
+	const table = useReactTable({
+		data,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+	});
+
+	return (
+		<div className="p-2">
+			<Table>
+				<TableHead>
+					{table.getHeaderGroups().map((headerGroup) => (
+						<TableRow key={headerGroup.id} className="collinson-red-background">
+							{headerGroup.headers.map((header) => (
+								<TableCell key={header.id} sx={{ color: "white", fontWeight: "bold" }}>
+									{header.isPlaceholder
+										? null
+										: flexRender(
+												header.column.columnDef.header,
+												header.getContext()
+										  )}
+								</TableCell>
+							))}
+						</TableRow>
+					))}
+				</TableHead>
+				<TableBody>
+					{table.getRowModel().rows.map((row) => (
+						<TableRow key={row.id}>
+							{row.getVisibleCells().map((cell) => (
+								<TableCell key={cell.id}>
+									{flexRender(cell.column.columnDef.cell, cell.getContext())}
+								</TableCell>
+							))}
+						</TableRow>
+					))}
+				</TableBody>
+			</Table>
+		</div>
+	);
+};
 
 const MapChart = () => {
 	const [data, setData] = useState<LoungeData>([]);
@@ -53,7 +149,6 @@ const MapChart = () => {
 	const [clickedLounge, setClickedLounge] = useState<LoungeData[0] | null>(
 		null
 	);
-	const [handleModalOpen, setHandleModalOpen] = useState(false);
 
 	useEffect(() => {
 		csv("/data.csv").then((lounges: any) => {
@@ -63,10 +158,10 @@ const MapChart = () => {
 				...lounge,
 				lat: parseFloat(lounge.lat),
 				lng: parseFloat(lounge.lng),
-				total_guest_adult: parseInt(lounge.total_guest_adult),
-				total_guest_child: parseInt(lounge.total_guest_child),
-				total_guest_infant: parseInt(lounge.total_guest_infant),
-				total_guest_count: parseInt(lounge.total_guest_count),
+				total_guest_count_adult: parseFloat(lounge.total_guest_count_adult),
+				total_guest_count_child: parseFloat(lounge.total_guest_count_child),
+				total_guest_count_infant: parseFloat(lounge.total_guest_count_infant),
+				total_guest_count: parseFloat(lounge.total_guest_count),
 				color: randomColor(),
 			}));
 
@@ -93,12 +188,11 @@ const MapChart = () => {
 
 	const handleClickedLounge = (lounge: LoungeData[0]) => {
 		setClickedLounge(lounge);
-		setHandleModalOpen(true);
 	};
 
 	const handleRefresh = () => {
 		setLoading(true);
-	}
+	};
 
 	return (
 		<>
@@ -122,11 +216,23 @@ const MapChart = () => {
 							}}
 						/>
 						<Button variant="contained" color="success" onClick={handleRefresh}>
-							Refresh
+							Refresh Data
 						</Button>
 					</CardContent>
 				</Card>
 				{/* Interactive actions section */}
+
+				{/* Selected lounge information section */}
+				<Card variant="outlined">
+					<CardContent>
+						{clickedLounge === null ? (
+							<></>
+						) : (
+							<ClickedLoungeTable loungeData={clickedLounge} />
+						)}
+					</CardContent>
+				</Card>
+				{/* Selected lounge information section */}
 
 				{/* Map Section */}
 				<Card variant="outlined">
@@ -220,27 +326,8 @@ const MapChart = () => {
 					</CardContent>
 				</Card>
 				{/* Map Section */}
-			</Stack>
 
-			<ModalCustom
-				setHandleModalOpen={setHandleModalOpen}
-				handleModalOpen={handleModalOpen}
-			>
-				<List sx={{ display: "flex", columnGap: 2 }}>
-					<ListItem sx={{ display: "flex", flexDirection: "column" }}>
-						<AccountBalanceIcon sx={{ color: "rgb(162, 7, 41)" }} />
-						<Typography variant="subtitle2" color={"black"}>
-							Lounge - {clickedLounge?.lounge_code}
-						</Typography>
-					</ListItem>
-					<ListItem sx={{ display: "flex", flexDirection: "column" }}>
-						<HailIcon sx={{ color: "rgb(162, 7, 41)" }} />
-						<Typography variant="subtitle2" color={"black"}>
-							{clickedLounge?.total_guest_count}
-						</Typography>
-					</ListItem>
-				</List>
-			</ModalCustom>
+			</Stack>
 		</>
 	);
 };
