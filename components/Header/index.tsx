@@ -1,3 +1,4 @@
+import HailIcon from "@mui/icons-material/Hail";
 import HomeIcon from "@mui/icons-material/Home";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
@@ -20,8 +21,12 @@ const pages = [
 	{
 		link: "/",
 		text: "Home",
-		layout: "conciliacao_impostos",
 		icon: <HomeIcon />,
+	},
+	{
+		link: "/visits",
+		text: "Visits",
+		icon: <HailIcon />,
 	},
 ];
 
@@ -31,6 +36,10 @@ const Header = () => {
 	const router = useRouter();
 
 	const path = router.pathname;
+
+	if (router.route === "/") {
+		return <></>
+	}	
 
 	return (
 		<AppBar position="fixed" sx={{ background: "white" }}>
@@ -56,7 +65,8 @@ const Header = () => {
 						<List
 							component="nav"
 							aria-label="menu-list"
-							sx={{ padding: "10px", background: "rgb(162, 7, 41)", height: "100%" }}
+							className="collinson-red-background"
+							sx={{ padding: "10px", height: "100%", minWidth: "200px" }}
 						>
 							{pages.map((page, i) => {
 								return (
