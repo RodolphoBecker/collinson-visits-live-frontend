@@ -111,7 +111,10 @@ const ClickedLoungeTable = ({ loungeData }: ClickedLoungeTableProps) => {
 					{table.getHeaderGroups().map((headerGroup) => (
 						<TableRow key={headerGroup.id} className="collinson-red-background">
 							{headerGroup.headers.map((header) => (
-								<TableCell key={header.id} sx={{ color: "white", fontWeight: "bold" }}>
+								<TableCell
+									key={header.id}
+									sx={{ color: "white", fontWeight: "bold" }}
+								>
 									{header.isPlaceholder
 										? null
 										: flexRender(
@@ -142,8 +145,8 @@ const ClickedLoungeTable = ({ loungeData }: ClickedLoungeTableProps) => {
 const MapChart = () => {
 	const [data, setData] = useState<LoungeData>([]);
 	const [maxValue, setMaxValue] = useState(0);
-	const [scaleFactor, setScaleFactor] = useState(1);
-	const [loading, setLoading] = useState(false);
+	// const [scaleFactor, setScaleFactor] = useState(1);
+	const [loading, setLoading] = useState(true);
 	const [loungeCodesOptions, setLoungeCodesOptions] =
 		useState<LoungeCodeOptions>([]);
 	const [clickedLounge, setClickedLounge] = useState<LoungeData[0] | null>(
@@ -175,6 +178,13 @@ const MapChart = () => {
 
 			setData(mappedLounges);
 		});
+	}, []);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setLoading(false)
+		}, 3000);
+		return () => clearTimeout(timer);
 	}, []);
 
 	const popScale = useMemo(
@@ -215,7 +225,7 @@ const MapChart = () => {
 								loungeCodeFilter(value);
 							}}
 						/>
-						<Button variant="contained" color="success" onClick={handleRefresh}>
+						<Button variant="contained" color="success" disabled onClick={handleRefresh}>
 							Refresh Data
 						</Button>
 					</CardContent>
@@ -223,15 +233,34 @@ const MapChart = () => {
 				{/* Interactive actions section */}
 
 				{/* Selected lounge information section */}
-				<Card variant="outlined">
-					<CardContent>
-						{clickedLounge === null ? (
-							<></>
-						) : (
+				{clickedLounge !== null ? (
+					<Card
+						variant="outlined"
+						className="white-background"
+						sx={{ minHeight: "151px" }}
+					>
+						<CardContent>
 							<ClickedLoungeTable loungeData={clickedLounge} />
-						)}
-					</CardContent>
-				</Card>
+						</CardContent>
+					</Card>
+				) : (
+					<Card
+						variant="outlined"
+						className="collinson-red-background"
+						sx={{ minHeight: "151px", display: "flex", alignItems: "center", justifyContent: "center"}}
+					>
+						<CardContent>
+							<Stack textAlign={"center"}>
+								<Typography variant="h6" color={"white"}>
+									Selected Lounge Information
+								</Typography>
+								<Typography variant="body1" color={"white"}>
+									Click on a lounge for more details
+								</Typography>
+							</Stack>
+						</CardContent>
+					</Card>
+				)}
 				{/* Selected lounge information section */}
 
 				{/* Map Section */}
@@ -326,7 +355,6 @@ const MapChart = () => {
 					</CardContent>
 				</Card>
 				{/* Map Section */}
-
 			</Stack>
 		</>
 	);
